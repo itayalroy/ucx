@@ -469,7 +469,7 @@ uct_gdaki_put_batch_single(uct_gdaki_batch_t *batch, uint64_t flags,
     uct_gdaki_exec_init<scale>(&lane_id, &num_lanes);
     if (lane_id == 0) {
         wqe_idx = uct_gdaki_reserv_wqe_thread<res_ctrl>(qp, 1);
-        uct_gdaki_wqe_prepare_put_or_atomic(qp, doca_gpu_dev_verbs_get_wqe_ptr(qp, wqe_idx), wqe_idx, batch->list[0].e_op,
+        uct_gdaki_wqe_prepare_put_or_atomic(qp, doca_gpu_dev_verbs_get_wqe_ptr(qp, wqe_idx & qp->sq_wqe_mask), wqe_idx, batch->list[0].e_op,
                 cflag, batch->list[0].dst + dst_off, batch->list[0].rkey, batch->list[0].src + src_off, batch->list[0].lkey, size, 0, 0);
     }
 
