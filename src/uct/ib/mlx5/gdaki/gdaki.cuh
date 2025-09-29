@@ -95,9 +95,10 @@ template<ucs_device_level_t level> UCS_F_DEVICE void uct_rc_mlx5_gda_sync(void)
 UCS_F_DEVICE uint64_t uct_rc_mlx5_gda_max_alloc_wqe_base(
     uct_rc_gdaki_dev_ep_t *ep, unsigned count)
 {
+    cuda::atomic_ref<uint64_t, cuda::thread_scope_device> pi_ref(ep->sq_wqe_pi);
     /* TODO optimize by including sq_wqe_num in qp->sq_wqe_pi and updating it
        when processing a new completion */
-    return ep->sq_wqe_pi + ep->sq_wqe_num - count;
+    return pi_ref.load() + ep->sq_wqe_num - count;
 }
 
 UCS_F_DEVICE uint64_t uct_rc_mlx5_gda_reserv_wqe_thread(
