@@ -94,7 +94,8 @@ UCS_F_DEVICE ucs_status_t ucp_device_prepare_send(
         return UCS_ERR_INVALID_PARAM;
     }
 
-    device_ep   = mem_list_h->uct_device_eps[lane];
+    device_ep   = reinterpret_cast<uct_device_ep_t*>(
+            reinterpret_cast<void*>(mem_list_h->uct_device_eps[lane]));
     elem_offset = first_mem_elem_index * mem_list_h->uct_mem_element_size[lane];
     uct_elem    = (uct_device_mem_element_t*)
             UCS_PTR_BYTE_OFFSET(mem_list_h->uct_mem_elements, elem_offset);
