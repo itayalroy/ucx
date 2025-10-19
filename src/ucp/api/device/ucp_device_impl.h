@@ -442,9 +442,9 @@ UCS_F_DEVICE ucs_status_t ucp_device_progress_req(ucp_device_request_t *req)
         return req->status;
     }
 
-    uct_device_ep_progress<level>(req->device_ep);
-    req->status = uct_device_ep_check_completion<level>(req->device_ep,
-                                                        &req->comp);
+    uct_device_ep_h device_ep = reinterpret_cast<uct_device_ep_h>(reinterpret_cast<void*>(req->device_ep));
+    uct_device_ep_progress<level>(device_ep);
+    req->status = uct_device_ep_check_completion<level>(device_ep, &req->comp);
     return req->status;
 }
 
