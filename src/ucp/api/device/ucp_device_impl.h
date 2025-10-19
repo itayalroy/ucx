@@ -442,7 +442,14 @@ UCS_F_DEVICE ucs_status_t ucp_device_progress_req(ucp_device_request_t *req)
         return req->status;
     }
 
-    uct_device_ep_h device_ep = reinterpret_cast<uct_device_ep_h>(req->device_ep_ptr);
+    /* Use inline assembly to load device_ep_ptr and break LLVM's address space
+     * provenance tracking. This prevents llvm.nvvm.isspacep.local() from being
+     * generated with typed pointers when the request is in shared memory. */
+    uintptr_t ep_ptr_val;
+    asm volatile("ld.u64 %0, [%1];"
+                 : "=l"(ep_ptr_val)
+                 : "l"(&req->device_ep_ptr));
+    uct_device_ep_h device_ep = reinterpret_cast<uct_device_ep_h>(ep_ptr_val);
     uct_device_ep_progress<level>(device_ep);
     req->status = uct_device_ep_check_completion<level>(device_ep, &req->comp);
     return req->status;
