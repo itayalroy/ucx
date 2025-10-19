@@ -25,7 +25,7 @@
 typedef struct ucp_device_request {
     uct_device_completion_t comp;
     ucs_status_t            status;
-    uct_device_ep_h         device_ep;
+    uintptr_t               device_ep_ptr;
     unsigned                channel_id;
 } ucp_device_request_t;
 
@@ -51,8 +51,8 @@ UCS_F_DEVICE void ucp_device_request_init(uct_device_ep_t *device_ep,
                                           uct_device_completion_t *&comp)
 {
     if (req != nullptr) {
-        comp           = &req->comp;
-        req->device_ep = device_ep;
+        comp               = &req->comp;
+        req->device_ep_ptr = reinterpret_cast<uintptr_t>(device_ep);
     } else {
         comp = nullptr;
     }
@@ -94,8 +94,7 @@ UCS_F_DEVICE ucs_status_t ucp_device_prepare_send(
         return UCS_ERR_INVALID_PARAM;
     }
 
-    device_ep   = reinterpret_cast<uct_device_ep_t*>(
-            reinterpret_cast<void*>(mem_list_h->uct_device_eps[lane]));
+    device_ep = mem_list_h->uct_device_eps[lane];
     elem_offset = first_mem_elem_index * mem_list_h->uct_mem_element_size[lane];
     uct_elem    = (uct_device_mem_element_t*)
             UCS_PTR_BYTE_OFFSET(mem_list_h->uct_mem_elements, elem_offset);
@@ -443,7 +442,7 @@ UCS_F_DEVICE ucs_status_t ucp_device_progress_req(ucp_device_request_t *req)
         return req->status;
     }
 
-    uct_device_ep_h device_ep = reinterpret_cast<uct_device_ep_h>(reinterpret_cast<void*>(req->device_ep));
+    uct_device_ep_h device_ep = reinterpret_cast<uct_device_ep_h>(req->device_ep_ptr);
     uct_device_ep_progress<level>(device_ep);
     req->status = uct_device_ep_check_completion<level>(device_ep, &req->comp);
     return req->status;
