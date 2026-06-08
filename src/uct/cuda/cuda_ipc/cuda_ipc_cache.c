@@ -453,7 +453,11 @@ uct_cuda_ipc_open_memhandle(uct_cuda_ipc_rkey_t *key, CUdevice cu_dev,
 {
     ucs_log_level_t level;
 
-    ucs_trace("key handle type %u", key->ph.handle_type);
+    ucs_debug("cuda ipc open handle %s(%u) remote base %p length %zu dev %d "
+              "buffer_id %llu",
+              uct_cuda_ipc_key_handle_type_str(key->ph.handle_type),
+              key->ph.handle_type, (void*)key->d_bptr, key->b_len, cu_dev,
+              key->ph.buffer_id);
 
     switch(key->ph.handle_type) {
     case UCT_CUDA_IPC_KEY_HANDLE_TYPE_LEGACY:
@@ -694,6 +698,12 @@ UCS_PROFILE_FUNC(ucs_status_t, uct_cuda_ipc_map_memhandle,
             goto err;
         }
     }
+
+    ucs_debug("%s: cuda ipc mapped handle %s(%u) remote base %p mapped base %p "
+              "length %zu dev %d buffer_id %llu",
+              cache->name, uct_cuda_ipc_key_handle_type_str(key->ph.handle_type),
+              key->ph.handle_type, (void*)key->d_bptr, *mapped_addr,
+              key->b_len, cu_dev, key->ph.buffer_id);
 
     /*create new cache entry */
     ret = ucs_posix_memalign((void **)&region,

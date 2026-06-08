@@ -24,6 +24,26 @@ typedef enum {
 } uct_cuda_ipc_key_handle_t;
 
 
+static UCS_F_ALWAYS_INLINE const char *
+uct_cuda_ipc_key_handle_type_str(uct_cuda_ipc_key_handle_t handle_type)
+{
+    switch (handle_type) {
+    case UCT_CUDA_IPC_KEY_HANDLE_TYPE_NO_IPC:
+        return "no_ipc";
+    case UCT_CUDA_IPC_KEY_HANDLE_TYPE_LEGACY:
+        return "legacy";
+#if HAVE_CUDA_FABRIC
+    case UCT_CUDA_IPC_KEY_HANDLE_TYPE_VMM:
+        return "vmm";
+    case UCT_CUDA_IPC_KEY_HANDLE_TYPE_MEMPOOL:
+        return "mempool";
+#endif
+    default:
+        return "unknown";
+    }
+}
+
+
 typedef struct uct_cuda_ipc_md_handle {
     uct_cuda_ipc_key_handle_t handle_type;
     union {

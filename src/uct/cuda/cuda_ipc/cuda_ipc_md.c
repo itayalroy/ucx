@@ -194,6 +194,11 @@ uct_cuda_ipc_mem_add_reg(void *addr, uct_cuda_ipc_memh_t *memh,
         goto out_pop_ctx;
     }
 
+    ucs_debug("cuda ipc pointer attrs addr %p legacy capable %d allowed "
+              "handle types 0x%llx mempool %p",
+              addr, legacy_capable, (unsigned long long)allowed_handle_types,
+              (void*)mempool);
+
     if (legacy_capable) {
         goto legacy_path;
     }
@@ -261,6 +266,11 @@ legacy_path:
 
 common_path:
     ucs_list_add_tail(&memh->list, &key->link);
+    ucs_debug("cuda ipc registered addr %p base %p length %zu handle %s(%u) "
+              "dev %d buffer_id %llu",
+              addr, (void*)key->d_bptr, key->b_len,
+              uct_cuda_ipc_key_handle_type_str(key->ph.handle_type),
+              key->ph.handle_type, cuda_device, key->ph.buffer_id);
     ucs_trace("registered addr:%p/%p length:%zd type:%u dev_num:%d "
               "buffer_id:%llu",
               addr, (void*)key->d_bptr, key->b_len, key->ph.handle_type,
@@ -569,6 +579,7 @@ uct_cuda_ipc_md_mem_elem_pack(uct_md_h md, uct_mem_h memh, uct_rkey_t rkey,
     ucs_status_t status;
     CUdevice cuda_device;
     void *mapped_addr;
+    ptrdiff_t mapped_offset;
 
     if (UCT_CUDADRV_FUNC_LOG_DEBUG(cuCtxGetDevice(&cuda_device)) != UCS_OK) {
         return UCS_ERR_UNREACHABLE;
@@ -580,8 +591,17 @@ uct_cuda_ipc_md_mem_elem_pack(uct_md_h md, uct_mem_h memh, uct_rkey_t rkey,
         return status;
     }
 
-    cuda_ipc_md_mem_element->mapped_offset =
-            UCS_PTR_BYTE_DIFF(key->super.super.d_bptr, mapped_addr);
+    mapped_offset = UCS_PTR_BYTE_DIFF(key->super.super.d_bptr, mapped_addr);
+    cuda_ipc_md_mem_element->mapped_offset = mapped_offset;
+
+    ucs_debug("cuda ipc device mem element handle %s(%u) remote base %p "
+              "mapped base %p mapped offset %ld length %zu dev %d "
+              "buffer_id %llu",
+              uct_cuda_ipc_key_handle_type_str(key->super.super.ph.handle_type),
+              key->super.super.ph.handle_type,
+              (void*)key->super.super.d_bptr, mapped_addr,
+              (long)mapped_offset, key->super.super.b_len, cuda_device,
+              key->super.super.ph.buffer_id);
 
     return UCS_OK;
 }
