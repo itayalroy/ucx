@@ -194,7 +194,7 @@ uct_cuda_ipc_mem_add_reg(void *addr, uct_cuda_ipc_memh_t *memh,
         goto out_pop_ctx;
     }
 
-    ucs_debug("cuda ipc pointer attrs addr %p legacy capable %d allowed "
+    ucs_print("cuda ipc pointer attrs addr %p legacy capable %d allowed "
               "handle types 0x%llx mempool %p",
               addr, legacy_capable, (unsigned long long)allowed_handle_types,
               (void*)mempool);
@@ -266,7 +266,7 @@ legacy_path:
 
 common_path:
     ucs_list_add_tail(&memh->list, &key->link);
-    ucs_debug("cuda ipc registered addr %p base %p length %zu handle %s(%u) "
+    ucs_print("cuda ipc registered addr %p base %p length %zu handle %s(%u) "
               "dev %d buffer_id %llu",
               addr, (void*)key->d_bptr, key->b_len,
               uct_cuda_ipc_key_handle_type_str(key->ph.handle_type),
@@ -594,7 +594,7 @@ uct_cuda_ipc_md_mem_elem_pack(uct_md_h md, uct_mem_h memh, uct_rkey_t rkey,
     mapped_offset = UCS_PTR_BYTE_DIFF(key->super.super.d_bptr, mapped_addr);
     cuda_ipc_md_mem_element->mapped_offset = mapped_offset;
 
-    ucs_debug("cuda ipc device mem element handle %s(%u) remote base %p "
+    ucs_print("cuda ipc device mem element handle %s(%u) remote base %p "
               "mapped base %p mapped offset %ld length %zu dev %d "
               "buffer_id %llu",
               uct_cuda_ipc_key_handle_type_str(key->super.super.ph.handle_type),
