@@ -250,6 +250,23 @@ static void uct_cuda_ipc_cache_evict_lru(uct_cuda_ipc_cache_t *cache)
     }
 }
 
+static int uct_cuda_ipc_cache_purge_unused(uct_cuda_ipc_cache_t *cache)
+{
+    uct_cuda_ipc_cache_region_t *region, *tmp;
+    int is_empty;
+
+    pthread_rwlock_wrlock(&cache->lock);
+    ucs_list_for_each_safe(region, tmp, &cache->lru_list, lru_list) {
+        if (region->refcount == 0) {
+            uct_cuda_ipc_cache_region_destroy(cache, region);
+        }
+    }
+    is_empty = cache->num_regions == 0;
+    pthread_rwlock_unlock(&cache->lock);
+
+    return is_empty;
+}
+
 static void uct_cuda_ipc_cache_purge(uct_cuda_ipc_cache_t *cache)
 {
     uct_cuda_ipc_cache_region_t *region, *tmp;
@@ -964,6 +981,11 @@ void uct_cuda_ipc_destroy_cache_by_iface_address(
         }
 
         cache = kh_val(&uct_cuda_ipc_remote_cache.hash, khiter);
+        /* The cache is shared by all endpoints to the remote process. */
+        if (!uct_cuda_ipc_cache_purge_unused(cache)) {
+            continue;
+        }
+
         uct_cuda_ipc_destroy_cache(cache);
         kh_del(cuda_ipc_rem_cache, &uct_cuda_ipc_remote_cache.hash, khiter);
     }
